@@ -88,12 +88,12 @@ button{width:100%}
   <div class="panel" id="panel">
     <i></i><i></i><i></i><i></i>
     <div class="form">
-      <div><label for="CountryCode">Target region</label>
-      <input type="text" id="CountryCode" placeholder="Country code (+49) or country name" oninput="lookupCountry()" autocomplete="off"></div>
+      <div><label for="CountryCode">Region (optional)</label>
+      <input type="text" id="CountryCode" placeholder="Only needed without +49" oninput="lookupCountry()" autocomplete="off"></div>
       <div><label for="PhoneOne">Number 01</label>
-      <input type="text" inputmode="numeric" id="PhoneOne" placeholder="Enter Phone Number"></div>
+      <input type="text" inputmode="tel" id="PhoneOne" placeholder="+49 176 12345678"></div>
       <div><label for="PhoneTwo">Number 02</label>
-      <input type="text" inputmode="numeric" id="PhoneTwo" placeholder="Enter Phone Number"></div>
+      <input type="text" inputmode="tel" id="PhoneTwo" placeholder="+49 176 12345678 (optional)"></div>
       <button id="searchButton" onclick="searchNumbers()">Search</button>
     </div>
     <p id="countryInfo"></p>
@@ -200,24 +200,34 @@ function row(label,value,cls){
   return {r,b,value};
 }
 
+function detectCountry(raw){
+  const s=raw.replace(/[\s\-().\/]/g,'');
+  let d=null;
+  if(s.startsWith('+')) d=s.slice(1); else if(s.startsWith('00')) d=s.slice(2);
+  if(d===null||!/^\d+$/.test(d)) return null;
+  for(let len=3;len>=1;len--){
+    const c='+'+d.slice(0,len);
+    const m=COUNTRY_CODES.filter(x=>x.code===c);
+    if(m.length) return {code:c,rest:d.slice(len),matches:m};
+  }
+  return null;
+}
+
 function searchNumbers(){
   const input=document.getElementById('CountryCode').value;
-  const phoneOne=document.getElementById('PhoneOne').value.trim();
-  const phoneTwo=document.getElementById('PhoneTwo').value.trim();
+  const nums=[document.getElementById('PhoneOne').value.trim(),document.getElementById('PhoneTwo').value.trim()].filter(Boolean);
   const panel=document.getElementById('panel');
-  if(!input||!phoneOne||!phoneTwo){
-    panel.classList.remove('shake');void panel.offsetWidth;panel.classList.add('shake');
-    alert('Please fill in all fields.');return;
-  }
-  const matches=findCountries(input);
-  if(!matches.length){
-    panel.classList.remove('shake');void panel.offsetWidth;panel.classList.add('shake');
-    alert('Country code not found.');return;
-  }
-  const code=matches[0].code;
-  const countries=[...new Set(matches.map(c=>c.land))].join(', ');
-  const isGermany=code==='+49';
+  const fail=m=>{panel.classList.remove('shake');void panel.offsetWidth;panel.classList.add('shake');alert(m);};
+  if(!nums.length){fail('Please enter a phone number.');return;}
   const clean=n=>n.replace(/\D/g,'').replace(/^0+/,'');
+  const fallback=input.trim()?findCountries(input):[];
+  const items=nums.map(n=>{
+    const det=detectCountry(n);
+    if(det) return {n:det.rest,code:det.code,matches:det.matches};
+    if(fallback.length) return {n:n,code:fallback[0].code,matches:fallback};
+    return null;
+  });
+  if(items.includes(null)){fail('Enter the number with country code (e.g. +49 176 12345678) or set a region.');return;}
 
   const bar=document.getElementById('bar');
   bar.classList.remove('on');void bar.offsetWidth;bar.classList.add('on');
@@ -226,11 +236,13 @@ function searchNumbers(){
   res.textContent='';
   const line=document.createElement('p');
   res.appendChild(line);
-  typeText(line,'> Searching for numbers: '+code+clean(phoneOne)+' and '+code+clean(phoneTwo),14);
+  typeText(line,'> Searching for numbers: '+items.map(x=>x.code+clean(x.n)).join(' and '),14);
 
   const meta=document.getElementById('metadata');
   meta.textContent='';
-  [phoneOne,phoneTwo].forEach((n,idx)=>{
+  items.forEach((it,idx)=>{
+    const n=it.n,code=it.code,isGermany=code==='+49';
+    const countries=[...new Set(it.matches.map(c=>c.land))].join(', ');
     const card=document.createElement('div');card.className='card';
     card.style.animationDelay=(0.5+idx*0.35)+'s';
     const h=document.createElement('h5');card.appendChild(h);
@@ -248,7 +260,7 @@ function searchNumbers(){
       rows.forEach((x,i)=>setTimeout(()=>decrypt(x.b,x.value,600),i*140));
     },(0.5+idx*0.35)*1000);
   });
-  if(isGermany){
+  if(items.some(x=>x.code==='+49')){
     const note=document.createElement('div');note.className='note';
     note.textContent='Note: The prefix only shows the originally allocated carrier. Because of number portability and providers like congstar or Aldi Talk, the current carrier can differ.';
     meta.appendChild(note);
