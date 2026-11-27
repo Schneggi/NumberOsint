@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Username Osint</title>
-    <style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Discord ID Lookup</title>
+<style>
 :root{--bg:#080304;--panel:#12070a;--fg:#ffd6d6;--dim:#8a4f55;--acc:#ff2a3d;--acc2:#ff7a45;--warn:#ffc857;--line:#3a0f16;color-scheme:dark;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#080304;--fg:#ffd6d6}}
 :root[data-theme="dark"]{--bg:#080304;--fg:#ffd6d6}
@@ -36,7 +36,7 @@ h1::after{color:var(--warn);text-shadow:none;animation:g2 2.7s infinite steps(1)
 .panel i:nth-child(2){top:-2px;right:-2px;border-left:0;border-bottom:0}
 .panel i:nth-child(3){bottom:-2px;left:-2px;border-right:0;border-top:0}
 .panel i:nth-child(4){bottom:-2px;right:-2px;border-left:0;border-top:0}
-.form{display:grid;grid-template-columns:1fr 1.4fr 1.4fr auto;gap:12px}
+.form{display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:12px}
 label{display:block;font-size:10px;letter-spacing:.2em;color:var(--dim);margin-bottom:5px;text-transform:uppercase}
 input{width:100%;background:rgba(255,42,61,.05);border:1px solid var(--line);border-bottom:2px solid var(--acc);color:var(--acc);font:inherit;font-size:16px;padding:12px;outline:0;transition:.25s;border-radius:0}
 input::placeholder{color:#5c2d35}
@@ -76,44 +76,40 @@ button{width:100%}
 #metadata{grid-template-columns:1fr}
 }
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important}#rain{display:none}}
+
+.form{grid-template-columns:1fr 1fr auto}
+.err{color:var(--warn)}
+.card.wide{grid-column:1/-1}
+@media (max-width:760px){.form{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
-    
 <canvas id="rain"></canvas>
 <div class="wrap">
   <div class="top"><span><i class="dot"></i>SECURE CHANNEL // ONLINE</span><span id="clock">--:--:--</span></div>
-  <h1 data-t="Number Osint">Username Osint</h1>
+  <h1 data-t="Discord ID Lookup">Discord ID Lookup</h1>
   <div class="sub" id="boot"></div>
-<div class="panel" id="panel">
+
+  <div class="panel" id="panel">
     <i></i><i></i><i></i><i></i>
     <div class="form">
-      <div><label for="Username">Username</label>
-      <input type="text" id="Placeholder" readonly placeholder="Enter Username:"></div>
-      <input type="text" id="Username" placeholder="username"></div>
-      <button id="searchButton" onclick="searchUsername()">Search</button>
+      <div><label for="Username">Username (coming soon)</label>
+      <input type="text" id="Username" placeholder="username" autocomplete="off"></div>
+      <div><label for="DiscordId">Discord ID</label>
+      <input type="text" inputmode="numeric" id="DiscordId" placeholder="e.g. 80351110224678912" autocomplete="off"></div>
+      <button id="searchButton" onclick="searchId()">Search</button>
+    </div>
+    <p id="countryInfo"></p>
+    <div class="bar" id="bar"><b></b></div>
+    <div id="results"></div>
+  </div>
+
+  <h4>Discord Results</h4>
+  <div id="metadata"></div>
 </div>
 
-<h4 id="h4"></h4>
-<h4 id="dc-results"></h4>
-
 <script>
-<!--Discord Results which come after Pressing search-->
-const h4= document.getElementById('h4');
-h4.innerHTML='<i class="dot"></i>Results';
-const dcResults= document.getElementById('dc-results');
-dcResults.innerHTML='<i class="dot"></i>Discord Results';
-function searchUsername() {
-  const username = document.getElementById('Username').value;
-  if (username) {
-    // Perform the search logic here
-    // Update the results section with the search results
-    h4.innerHTML = `<i class="dot"></i>Results for ${username}`;
-  } else {
-    alert('Please enter a username to search.');
-  }
-}
-<!--Design-->
+/* ---------- visual effects ---------- */
 const GLYPHS='01ABCDEF<>/\\|#$%&*+=?';
 function decrypt(el,text,dur){
   dur=dur||700;
@@ -130,7 +126,7 @@ function typeText(el,text,speed,done){
   let i=0;
   (function t(){ el.textContent=text.slice(0,++i); if(i<text.length) setTimeout(t,speed); else if(done) done(); })();
 }
-typeText(document.getElementById('boot'),'> initializing module... database loaded',32);
+typeText(document.getElementById('boot'),'> initializing module... ',32);
 setInterval(()=>{document.getElementById('clock').textContent=new Date().toLocaleTimeString('de-DE')},1000);
 
 const cv=document.getElementById('rain'),cx=cv.getContext('2d');
@@ -152,6 +148,92 @@ resize();addEventListener('resize',resize);
   }
   requestAnimationFrame(rain);
 })();
-    </script>
+
+
+
+/* ---------- discord id decoding (runs fully offline, no bot, no API) ---------- */
+const $=id=>document.getElementById(id);
+const DISCORD_EPOCH=1420070400000n;
+
+function row(label,value,cls){
+  const r=document.createElement('div');r.className='row';
+  const a=document.createElement('span');a.textContent=label;
+  const b=document.createElement('span');if(cls) b.className=cls;
+  r.append(a,b);
+  return {r,b,value:String(value)};
+}
+const pad=n=>String(n).padStart(2,'0');
+const fmtUtc=d=>d.getUTCFullYear()+'-'+pad(d.getUTCMonth()+1)+'-'+pad(d.getUTCDate())+' '+pad(d.getUTCHours())+':'+pad(d.getUTCMinutes())+':'+pad(d.getUTCSeconds())+' UTC';
+
+function age(from,to){
+  let y=to.getUTCFullYear()-from.getUTCFullYear();
+  let m=to.getUTCMonth()-from.getUTCMonth();
+  let d=to.getUTCDate()-from.getUTCDate();
+  if(d<0){m--;d+=new Date(Date.UTC(to.getUTCFullYear(),to.getUTCMonth(),0)).getUTCDate();}
+  if(m<0){y--;m+=12;}
+  return y+' years, '+m+' months, '+d+' days';
+}
+
+function decodeId(raw){
+  const id=BigInt(raw);
+  const ms=(id>>22n)+DISCORD_EPOCH;
+  const date=new Date(Number(ms));
+  return {
+    id:raw,date,ms:ms.toString(),
+    worker:Number((id&0x3E0000n)>>17n),
+    process:Number((id&0x1F000n)>>12n),
+    inc:Number(id&0xFFFn),
+    avatarIdx:Number((id>>22n)%6n),
+    plausible:date.getTime()>=Number(DISCORD_EPOCH)&&date.getTime()<=Date.now()+86400000
+  };
+}
+
+function lookupLive(){
+  const v=$('DiscordId').value.trim();
+  $('countryInfo').textContent=v?(/^\d{17,20}$/.test(v)?'ID format: valid snowflake':'ID format: expected 17 to 20 digits'):'';
+}
+$('DiscordId').addEventListener('input',lookupLive);
+
+function searchId(){
+  const raw=$('DiscordId').value.trim();
+  const panel=$('panel'),res=$('results'),meta=$('metadata'),bar=$('bar');
+  const fail=m=>{
+    panel.classList.remove('shake');void panel.offsetWidth;panel.classList.add('shake');
+    res.textContent='';const p=document.createElement('p');p.className='err';p.textContent='> ERROR: '+m;res.appendChild(p);
+  };
+  if(!raw) return fail('Please enter a Discord ID.');
+  if(!/^\d{17,20}$/.test(raw)) return fail('A Discord ID has 17 to 20 digits.');
+
+  const r=decodeId(raw);
+  meta.textContent='';
+  bar.classList.remove('on');void bar.offsetWidth;bar.classList.add('on');
+  res.textContent='';
+  const line=document.createElement('p');res.appendChild(line);
+  typeText(line,'> decoding snowflake '+raw,14);
+
+  const card=document.createElement('div');card.className='card';card.style.animationDelay='.4s';
+  const h=document.createElement('h5');card.appendChild(h);
+  const rows=[
+    row('Discord ID',raw),
+    row('Valid timestamp',r.plausible?'yes':'no (date outside Discord history)',r.plausible?'':'warn'),
+    row('Created (UTC)',fmtUtc(r.date)),
+    row('Created (local)',r.date.toLocaleString('de-DE')),
+    row('Account age',r.plausible?age(r.date,new Date()):'n/a'),
+    row('Unix time (ms)',r.ms),
+    row('Worker ID',r.worker),
+    row('Process ID',r.process),
+    row('Increment',r.inc),
+    row('Default avatar',r.avatarIdx+' (of 0 to 5)'),
+  ];
+  rows.forEach(x=>card.appendChild(x.r));
+  meta.appendChild(card);
+  setTimeout(()=>{
+    decrypt(h,raw,800);
+    rows.forEach((x,i)=>setTimeout(()=>decrypt(x.b,x.value,500),i*110));
+  },400);
+  meta.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+$('DiscordId').addEventListener('keydown',e=>{if(e.key==='Enter') searchId();});
+</script>
 </body>
 </html>
