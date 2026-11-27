@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Number OSINT</title>
-<style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gray Osint</title>
+  <style>
 :root{--bg:#080304;--panel:#12070a;--fg:#ffd6d6;--dim:#8a4f55;--acc:#ff2a3d;--acc2:#ff7a45;--warn:#ffc857;--line:#3a0f16;color-scheme:dark;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#080304;--fg:#ffd6d6}}
 :root[data-theme="dark"]{--bg:#080304;--fg:#ffd6d6}
@@ -79,70 +79,21 @@ button{width:100%}
 </style>
 </head>
 <body>
-<canvas id="rain"></canvas>
-<div class="wrap">
-  <div class="top"><span><i class="dot"></i>SECURE CHANNEL // ONLINE</span><span id="clock">--:--:--</span></div>
-  <h1 data-t="Number Osint">Number Osint</h1>
-  <div class="sub" id="boot"></div>
-
-  <div class="panel" id="panel">
-    <i></i><i></i><i></i><i></i>
-    <div class="form">
-      <div><label for="CountryCode">Region (optional)</label>
-      <input type="text" id="CountryCode" placeholder="Only needed without +49" oninput="lookupCountry()" autocomplete="off"></div>
-      <div><label for="PhoneOne">Number 01</label>
-      <input type="text" inputmode="tel" id="PhoneOne" placeholder="+49 176 12345678"></div>
-      <div><label for="PhoneTwo">Number 02</label>
-      <input type="text" inputmode="tel" id="PhoneTwo" placeholder="+49 176 12345678 (optional)"></div>
-      <button id="searchButton" onclick="searchNumbers()">Search</button>
+  <canvas id="rain"></canvas>
+  <div class="wrap">
+    <div class="top">
+      <span>Gray Osint</span>
+      <span>v1.0</span>
+      <h1 data-t="Gray Osint">Gray Osint</h1>
+      <div class="sub">By Gray | Furry</div>
+      <div class="sub" id="boot"></div>
     </div>
-    <p id="countryInfo"></p>
-    <div class="bar" id="bar"><b></b></div>
-    <div id="results"></div>
-  </div>
-
-  <h4>Metadata</h4>
-  <div id="metadata"></div>
-</div>
+    <br>
+    <div>
+    <button id="searchButton" onclick="window.location.href='numberosint.html'">Number Osint</button>
+    </div>
 
 <script>
-const COUNTRY_CODES = [{"code": "+1", "land": "USA"}, {"code": "+1", "land": "Kanada"}, {"code": "+1", "land": "Bahamas"}, {"code": "+1", "land": "Jamaika"}, {"code": "+1", "land": "Puerto Rico"}, {"code": "+1", "land": "Dominikanische Republik"}, {"code": "+1", "land": "Trinidad und Tobago"}, {"code": "+1", "land": "Barbados"}, {"code": "+1", "land": "Bermuda"}, {"code": "+1", "land": "Kaimaninseln"}, {"code": "+7", "land": "Russland"}, {"code": "+7", "land": "Kasachstan"}, {"code": "+20", "land": "Ägypten"}, {"code": "+27", "land": "Südafrika"}, {"code": "+211", "land": "Südsudan"}, {"code": "+212", "land": "Marokko"}, {"code": "+213", "land": "Algerien"}, {"code": "+216", "land": "Tunesien"}, {"code": "+218", "land": "Libyen"}, {"code": "+220", "land": "Gambia"}, {"code": "+221", "land": "Senegal"}, {"code": "+222", "land": "Mauretanien"}, {"code": "+223", "land": "Mali"}, {"code": "+224", "land": "Guinea"}, {"code": "+225", "land": "Elfenbeinküste"}, {"code": "+226", "land": "Burkina Faso"}, {"code": "+227", "land": "Niger"}, {"code": "+228", "land": "Togo"}, {"code": "+229", "land": "Benin"}, {"code": "+230", "land": "Mauritius"}, {"code": "+231", "land": "Liberia"}, {"code": "+232", "land": "Sierra Leone"}, {"code": "+233", "land": "Ghana"}, {"code": "+234", "land": "Nigeria"}, {"code": "+235", "land": "Tschad"}, {"code": "+236", "land": "Zentralafrikanische Republik"}, {"code": "+237", "land": "Kamerun"}, {"code": "+238", "land": "Kap Verde"}, {"code": "+239", "land": "São Tomé und Príncipe"}, {"code": "+240", "land": "Äquatorialguinea"}, {"code": "+241", "land": "Gabun"}, {"code": "+242", "land": "Republik Kongo"}, {"code": "+243", "land": "DR Kongo"}, {"code": "+244", "land": "Angola"}, {"code": "+245", "land": "Guinea-Bissau"}, {"code": "+246", "land": "Diego Garcia"}, {"code": "+247", "land": "Ascension"}, {"code": "+248", "land": "Seychellen"}, {"code": "+249", "land": "Sudan"}, {"code": "+250", "land": "Ruanda"}, {"code": "+251", "land": "Äthiopien"}, {"code": "+252", "land": "Somalia"}, {"code": "+253", "land": "Dschibuti"}, {"code": "+254", "land": "Kenia"}, {"code": "+255", "land": "Tansania"}, {"code": "+256", "land": "Uganda"}, {"code": "+257", "land": "Burundi"}, {"code": "+258", "land": "Mosambik"}, {"code": "+260", "land": "Sambia"}, {"code": "+261", "land": "Madagaskar"}, {"code": "+262", "land": "Réunion"}, {"code": "+262", "land": "Mayotte"}, {"code": "+263", "land": "Simbabwe"}, {"code": "+264", "land": "Namibia"}, {"code": "+265", "land": "Malawi"}, {"code": "+266", "land": "Lesotho"}, {"code": "+267", "land": "Botswana"}, {"code": "+268", "land": "Eswatini"}, {"code": "+269", "land": "Komoren"}, {"code": "+290", "land": "St. Helena"}, {"code": "+291", "land": "Eritrea"}, {"code": "+297", "land": "Aruba"}, {"code": "+298", "land": "Färöer"}, {"code": "+299", "land": "Grönland"}, {"code": "+30", "land": "Griechenland"}, {"code": "+31", "land": "Niederlande"}, {"code": "+32", "land": "Belgien"}, {"code": "+33", "land": "Frankreich"}, {"code": "+34", "land": "Spanien"}, {"code": "+350", "land": "Gibraltar"}, {"code": "+351", "land": "Portugal"}, {"code": "+352", "land": "Luxemburg"}, {"code": "+353", "land": "Irland"}, {"code": "+354", "land": "Island"}, {"code": "+355", "land": "Albanien"}, {"code": "+356", "land": "Malta"}, {"code": "+357", "land": "Zypern"}, {"code": "+358", "land": "Finnland"}, {"code": "+359", "land": "Bulgarien"}, {"code": "+36", "land": "Ungarn"}, {"code": "+370", "land": "Litauen"}, {"code": "+371", "land": "Lettland"}, {"code": "+372", "land": "Estland"}, {"code": "+373", "land": "Moldau"}, {"code": "+374", "land": "Armenien"}, {"code": "+375", "land": "Belarus"}, {"code": "+376", "land": "Andorra"}, {"code": "+377", "land": "Monaco"}, {"code": "+378", "land": "San Marino"}, {"code": "+380", "land": "Ukraine"}, {"code": "+381", "land": "Serbien"}, {"code": "+382", "land": "Montenegro"}, {"code": "+383", "land": "Kosovo"}, {"code": "+385", "land": "Kroatien"}, {"code": "+386", "land": "Slowenien"}, {"code": "+387", "land": "Bosnien und Herzegowina"}, {"code": "+389", "land": "Nordmazedonien"}, {"code": "+39", "land": "Italien"}, {"code": "+39", "land": "Vatikanstadt"}, {"code": "+40", "land": "Rumänien"}, {"code": "+41", "land": "Schweiz"}, {"code": "+420", "land": "Tschechien"}, {"code": "+421", "land": "Slowakei"}, {"code": "+423", "land": "Liechtenstein"}, {"code": "+43", "land": "Österreich"}, {"code": "+44", "land": "Vereinigtes Königreich"}, {"code": "+45", "land": "Dänemark"}, {"code": "+46", "land": "Schweden"}, {"code": "+47", "land": "Norwegen"}, {"code": "+48", "land": "Polen"}, {"code": "+49", "land": "Deutschland"}, {"code": "+500", "land": "Falklandinseln"}, {"code": "+501", "land": "Belize"}, {"code": "+502", "land": "Guatemala"}, {"code": "+503", "land": "El Salvador"}, {"code": "+504", "land": "Honduras"}, {"code": "+505", "land": "Nicaragua"}, {"code": "+506", "land": "Costa Rica"}, {"code": "+507", "land": "Panama"}, {"code": "+508", "land": "St. Pierre und Miquelon"}, {"code": "+509", "land": "Haiti"}, {"code": "+51", "land": "Peru"}, {"code": "+52", "land": "Mexiko"}, {"code": "+53", "land": "Kuba"}, {"code": "+54", "land": "Argentinien"}, {"code": "+55", "land": "Brasilien"}, {"code": "+56", "land": "Chile"}, {"code": "+57", "land": "Kolumbien"}, {"code": "+58", "land": "Venezuela"}, {"code": "+590", "land": "Guadeloupe"}, {"code": "+591", "land": "Bolivien"}, {"code": "+592", "land": "Guyana"}, {"code": "+593", "land": "Ecuador"}, {"code": "+594", "land": "Französisch-Guayana"}, {"code": "+595", "land": "Paraguay"}, {"code": "+596", "land": "Martinique"}, {"code": "+597", "land": "Suriname"}, {"code": "+598", "land": "Uruguay"}, {"code": "+599", "land": "Curaçao"}, {"code": "+60", "land": "Malaysia"}, {"code": "+61", "land": "Australien"}, {"code": "+62", "land": "Indonesien"}, {"code": "+63", "land": "Philippinen"}, {"code": "+64", "land": "Neuseeland"}, {"code": "+65", "land": "Singapur"}, {"code": "+66", "land": "Thailand"}, {"code": "+670", "land": "Timor-Leste"}, {"code": "+672", "land": "Norfolkinsel"}, {"code": "+672", "land": "Antarktis"}, {"code": "+673", "land": "Brunei"}, {"code": "+674", "land": "Nauru"}, {"code": "+675", "land": "Papua-Neuguinea"}, {"code": "+676", "land": "Tonga"}, {"code": "+677", "land": "Salomonen"}, {"code": "+678", "land": "Vanuatu"}, {"code": "+679", "land": "Fidschi"}, {"code": "+680", "land": "Palau"}, {"code": "+681", "land": "Wallis und Futuna"}, {"code": "+682", "land": "Cookinseln"}, {"code": "+683", "land": "Niue"}, {"code": "+685", "land": "Samoa"}, {"code": "+686", "land": "Kiribati"}, {"code": "+687", "land": "Neukaledonien"}, {"code": "+688", "land": "Tuvalu"}, {"code": "+689", "land": "Französisch-Polynesien"}, {"code": "+690", "land": "Tokelau"}, {"code": "+691", "land": "Mikronesien"}, {"code": "+692", "land": "Marshallinseln"}, {"code": "+81", "land": "Japan"}, {"code": "+82", "land": "Südkorea"}, {"code": "+84", "land": "Vietnam"}, {"code": "+850", "land": "Nordkorea"}, {"code": "+852", "land": "Hongkong"}, {"code": "+853", "land": "Macau"}, {"code": "+855", "land": "Kambodscha"}, {"code": "+856", "land": "Laos"}, {"code": "+86", "land": "China"}, {"code": "+880", "land": "Bangladesch"}, {"code": "+886", "land": "Taiwan"}, {"code": "+90", "land": "Türkei"}, {"code": "+91", "land": "Indien"}, {"code": "+92", "land": "Pakistan"}, {"code": "+93", "land": "Afghanistan"}, {"code": "+94", "land": "Sri Lanka"}, {"code": "+95", "land": "Myanmar"}, {"code": "+960", "land": "Malediven"}, {"code": "+961", "land": "Libanon"}, {"code": "+962", "land": "Jordanien"}, {"code": "+963", "land": "Syrien"}, {"code": "+964", "land": "Irak"}, {"code": "+965", "land": "Kuwait"}, {"code": "+966", "land": "Saudi-Arabien"}, {"code": "+967", "land": "Jemen"}, {"code": "+968", "land": "Oman"}, {"code": "+970", "land": "Palästina"}, {"code": "+971", "land": "Vereinigte Arabische Emirate"}, {"code": "+972", "land": "Israel"}, {"code": "+973", "land": "Bahrain"}, {"code": "+974", "land": "Katar"}, {"code": "+975", "land": "Bhutan"}, {"code": "+976", "land": "Mongolei"}, {"code": "+977", "land": "Nepal"}, {"code": "+98", "land": "Iran"}, {"code": "+992", "land": "Tadschikistan"}, {"code": "+993", "land": "Turkmenistan"}, {"code": "+994", "land": "Aserbaidschan"}, {"code": "+995", "land": "Georgien"}, {"code": "+996", "land": "Kirgisistan"}, {"code": "+998", "land": "Usbekistan"}];
-
-const DE_MOBILE = {
-  '0151':'Telekom','0160':'Telekom','0170':'Telekom','0171':'Telekom','0175':'Telekom',
-  '0152':'Vodafone','0162':'Vodafone','0172':'Vodafone','0173':'Vodafone','0174':'Vodafone',
-  '01521':'Other service provider (not Vodafone)',
-  '0159':'o2 (Telefonica)','0176':'o2 (Telefonica)','0179':'o2 (Telefonica)',
-  '0157':'o2 (Telefonica, former E-Plus)','0163':'o2 (Telefonica, former E-Plus)',
-  '0177':'o2 (Telefonica, former E-Plus)','0178':'o2 (Telefonica, former E-Plus)',
-  '01555':'1&1 Mobilfunk',
-  '0150':'Service provider (no network operator)','0153':'Service provider (no network operator)',
-  '0158':'TelcoVillage (service provider)',
-  '0164':'Paging, not mobile','0168':'Paging, not mobile','0169':'Paging, not mobile'
-};
-
-function findCountries(input){
-  const q=input.trim().toLowerCase();
-  if(!q) return [];
-  const digits=q.replace(/^(\+|00)/,'');
-  if(/^\d+$/.test(digits)) return COUNTRY_CODES.filter(c=>c.code==='+'+digits);
-  return COUNTRY_CODES.filter(c=>c.land.toLowerCase().includes(q));
-}
-
-function germanCarrier(number){
-  let n=number.replace(/\D/g,'');
-  if(n.startsWith('0049')) n=n.slice(4);
-  else if(n.startsWith('49')&&n.length>10) n=n.slice(2);
-  n=n.replace(/^0+/,'');
-  const national='0'+n;
-  for(const len of [5,4]){
-    const key=national.slice(0,len);
-    if(DE_MOBILE[key]) return {prefix:key,carrier:DE_MOBILE[key]};
-  }
-  return null;
-}
-
-/* ---------- visual effects ---------- */
 const GLYPHS='01ABCDEF<>/\\|#$%&*+=?';
 function decrypt(el,text,dur){
   dur=dur||700;
@@ -159,7 +110,7 @@ function typeText(el,text,speed,done){
   let i=0;
   (function t(){ el.textContent=text.slice(0,++i); if(i<text.length) setTimeout(t,speed); else if(done) done(); })();
 }
-typeText(document.getElementById('boot'),'> initializing module... carrier prefix database loaded_',32);
+typeText(document.getElementById('boot'),'> Osint initalised',32);
 setInterval(()=>{document.getElementById('clock').textContent=new Date().toLocaleTimeString('de-DE')},1000);
 
 const cv=document.getElementById('rain'),cx=cv.getContext('2d');
@@ -181,93 +132,7 @@ resize();addEventListener('resize',resize);
   }
   requestAnimationFrame(rain);
 })();
-
-/* ---------- logic ---------- */
-function lookupCountry(){
-  const value=document.getElementById('CountryCode').value;
-  const info=document.getElementById('countryInfo');
-  if(!value.trim()){info.textContent='';return;}
-  const matches=findCountries(value);
-  const txt=matches.length?matches.map(c=>c.code+' = '+c.land).join(' | '):'No country found.';
-  info.textContent=txt;
-}
-
-function row(label,value,cls){
-  const r=document.createElement('div');r.className='row';
-  const a=document.createElement('span');a.textContent=label;
-  const b=document.createElement('span');if(cls) b.className=cls;
-  r.append(a,b);
-  return {r,b,value};
-}
-
-function detectCountry(raw){
-  const s=raw.replace(/[\s\-().\/]/g,'');
-  let d=null;
-  if(s.startsWith('+')) d=s.slice(1); else if(s.startsWith('00')) d=s.slice(2);
-  if(d===null||!/^\d+$/.test(d)) return null;
-  for(let len=3;len>=1;len--){
-    const c='+'+d.slice(0,len);
-    const m=COUNTRY_CODES.filter(x=>x.code===c);
-    if(m.length) return {code:c,rest:d.slice(len),matches:m};
-  }
-  return null;
-}
-
-function searchNumbers(){
-  const input=document.getElementById('CountryCode').value;
-  const nums=[document.getElementById('PhoneOne').value.trim(),document.getElementById('PhoneTwo').value.trim()].filter(Boolean);
-  const panel=document.getElementById('panel');
-  const fail=m=>{panel.classList.remove('shake');void panel.offsetWidth;panel.classList.add('shake');alert(m);};
-  if(!nums.length){fail('Please enter a phone number.');return;}
-  const clean=n=>n.replace(/\D/g,'').replace(/^0+/,'');
-  const fallback=input.trim()?findCountries(input):[];
-  const items=nums.map(n=>{
-    const det=detectCountry(n);
-    if(det) return {n:det.rest,code:det.code,matches:det.matches};
-    if(fallback.length) return {n:n,code:fallback[0].code,matches:fallback};
-    return null;
-  });
-  if(items.includes(null)){fail('Enter the number with country code (e.g. +49 176 12345678) or set a region.');return;}
-
-  const bar=document.getElementById('bar');
-  bar.classList.remove('on');void bar.offsetWidth;bar.classList.add('on');
-
-  const res=document.getElementById('results');
-  res.textContent='';
-  const line=document.createElement('p');
-  res.appendChild(line);
-  typeText(line,'> Searching for numbers: '+items.map(x=>x.code+clean(x.n)).join(' and '),14);
-
-  const meta=document.getElementById('metadata');
-  meta.textContent='';
-  items.forEach((it,idx)=>{
-    const n=it.n,code=it.code,isGermany=code==='+49';
-    const countries=[...new Set(it.matches.map(c=>c.land))].join(', ');
-    const card=document.createElement('div');card.className='card';
-    card.style.animationDelay=(0.5+idx*0.35)+'s';
-    const h=document.createElement('h5');card.appendChild(h);
-    const rows=[row('Country code',code),row('Country',countries)];
-    if(isGermany){
-      const r=germanCarrier(n);
-      if(r){rows.push(row('Prefix',r.prefix),row('Original carrier',r.carrier));}
-      else rows.push(row('Carrier','unknown (landline or unassigned prefix)','warn'));
-    }else rows.push(row('Carrier','lookup is only available for Germany (+49)','warn'));
-    rows.forEach(x=>card.appendChild(x.r));
-    meta.appendChild(card);
-    const full=code+clean(n);
-    setTimeout(()=>{
-      decrypt(h,full,800);
-      rows.forEach((x,i)=>setTimeout(()=>decrypt(x.b,x.value,600),i*140));
-    },(0.5+idx*0.35)*1000);
-  });
-  if(items.some(x=>x.code==='+49')){
-    const note=document.createElement('div');note.className='note';
-    note.textContent='Note: The prefix only shows the originally allocated carrier. Because of number portability and providers like congstar or Aldi Talk, the current carrier can differ.';
-    meta.appendChild(note);
-  }
-  meta.scrollIntoView({behavior:'smooth',block:'nearest'});
-}
-document.querySelectorAll('input').forEach(i=>i.addEventListener('keydown',e=>{if(e.key==='Enter') searchNumbers();}));
 </script>
+
 </body>
 </html>
